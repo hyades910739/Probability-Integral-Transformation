@@ -1,0 +1,118 @@
+---
+title: "Probability Integral Transformation"
+output:
+  html_document: default
+---
+
+### PDF and CDF:  
+
+\begin{equation}
+  MD_G(y) = 1/[1+(y-\mu_G)'\Sigma_G^-1(y-\mu_G) ]
+\end{equation}
+
+\begin{equation}
+Y \sim BN(\mu=
+    \begin{bmatrix}
+      0 \\
+      0
+    \end{bmatrix},
+    \sigma^2 =  
+    \begin{bmatrix}
+      1 & 0\\
+      0 & 1
+    \end{bmatrix})
+\end{equation}
+
+
+\begin{equation}
+M = \frac{(\vec{y}^T)
+    \begin{bmatrix}
+      1 & 0\\
+      0 & 1
+    \end{bmatrix}
+  (\vec{y})
+}{\sigma^2} \sim x^2(2) = exp(\lambda=0.5)
+\end{equation}
+
+
+\begin{equation}
+  f(m) = 0.5e^{-0.5m},\quad m>0
+\end{equation}
+
+
+\begin{equation}
+  N = \frac{1}{1+M},\quad 0<N<1
+\end{equation}
+
+\begin{equation}
+  F_{N}(n) =P(N\leq n) = P( \frac{1}{1+M}\leq n ) = P(M \geq\frac{1}{n}-1)
+  \\= \int_{\frac{1}{n}-1}^\infty 0.5e^{-0.5m}dm
+  \\= exp(\frac{n-1}{2n}),\quad 0<n<1
+\end{equation}
+
+<div class="hightlight">
+> \begin{equation}
+>  f(n) =\frac{1}{2n^2}exp(\frac{n-1}{2n}),\quad 0<n<1
+>\end{equation}
+><br>
+>
+>\begin{equation}
+>  F(n)= exp(\frac{n-1}{2n})
+>\end{equation}
+
+</div>
+
+```{r,warning=F}
+library(magrittr)
+library(ggplot2)
+set.seed(8+9)
+pdf = function(x){1/(2*x^2)*exp((x-1)/(2*x))}
+cdf = function(x){exp((x-1)/(2*x))}
+
+ggplot(data.frame(x=c(0, 1)), aes(x)) + 
+  stat_function(fun=pdf,color ="lightblue3",size=1) + 
+  labs(title="pdf")
+ggplot(data.frame(x=c(0, 1)), aes(x)) + 
+  stat_function(fun=cdf,color ="lightpink2",size=1) + 
+  labs(title="cdf")  
+
+```  
+
+Now, try to simulate samples by prob. integral trnasformation:
+
+1. find $F^{-1}(y)$ 
+
+\begin{equation}
+  Y =  F(n)= exp(\frac{n-1}{2n}) \sim Unif(0,1)
+  \\F^{-1}(y) = \frac{1}{1-2ln(Y)} \quad ,0<Y<1
+
+\end{equation}
+
+<div class= "blue">
+```{r}
+CDF_inverse = function(y){
+   1/(1-2*log(y))
+}
+```  
+</div>
+
+2. Create samples by $Unif(0,1)$ 
+
+```{r}
+sample = sapply(runif(1000,0,1),CDF_inverse)
+sample %>% summary()
+  
+```  
+
+
+3. comparison cdf with empirical distribution function 
+```{r,warning=F}
+ggplot(data.frame(x=sample,g = as.factor(base::rep("sample",1000))),aes(x,color=g)) +
+  geom_density(adjust = 0.8,size=1) +
+  stat_function(data = data.frame(x=c(0,1)),aes(x,color="pdf"),
+                fun=pdf,size=1) 
+
+```   
+
+
+
